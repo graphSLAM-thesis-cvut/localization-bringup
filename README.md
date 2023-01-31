@@ -1,4 +1,5 @@
 # LIO-SAM setup for a HUSKY robot with 9-axis IMU and LIDAR
+![logo](https://github.com/graphSLAM-thesis-cvut/localization-bringup/blob/main/media/logo.jpg)
 ## Hardware:
 - Ouster lidar (had to change some LIO-SAM code as suggested in [here](https://github.com/TixiaoShan/LIO-SAM/issues/94), as the drivers may be old)
 - [X-sens MTi-30 AHRS](https://cz.mouser.com/datasheet/2/693/mti-series-1358510.pdf) 
