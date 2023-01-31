@@ -1,2 +1,3 @@
-- Put the hierarchical structure back (resolve the problem that laser odometry is much less often then lidar)
-map -> odom_laser -> odom -> baselink
+- Make sure transform_tolerance doesn't brea anything (Maybe, it should be a much smaller value)
+- Check if `odometry/imu_incremental` actually incremental after a loop closure
+- Integrate a fork that supports 6DOF IMU

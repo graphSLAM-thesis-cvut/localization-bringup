@@ -1,30 +1,27 @@
 <launch>
 
-    <node name="map_to_odomlaser" pkg="map_to_odom_publisher" type="map_to_odom_publisher" output="screen">
-        <remap from="current_pose" to="/odometry/imu" />
-        <param name="odom_frame_id" value="odom" />
-        <param name="base_frame_id" value="os_sensor" />
-        <param name="global_frame_id" value="map" />
-        <param name="transform_tolerance" value="0.1" />
-
-    </node>
-
     <node name="odom_to_base" pkg="map_to_odom_publisher" type="map_to_odom_publisher" output="screen">
-        <remap from="current_pose" to="/odometry/imu" />
+        <remap from="current_pose" to="/odometry/imu_incremental" />
         <param name="odom_frame_id" value="base_link" />
         <param name="base_frame_id" value="os_sensor" />
         <param name="global_frame_id" value="odom" />
         <param name="transform_tolerance" value="0.1" />
-
     </node>
 
-    <!-- <node name="laser_odom_to_odom" pkg="map_to_odom_publisher" type="map_to_odom_publisher" output="screen">  
+    <node name="odomlio_to_odom" pkg="map_to_odom_publisher" type="map_to_odom_publisher" output="screen">
+        <remap from="current_pose" to="/odometry/imu_incremental" />
+        <param name="odom_frame_id" value="odom" />
+        <param name="base_frame_id" value="os_sensor" />
+        <param name="global_frame_id" value="odom_lio" />
+        <param name="transform_tolerance" value="0.1" />
+    </node>
+
+    <node name="map_to_odomlio" pkg="map_to_odom_publisher" type="map_to_odom_publisher" output="screen">
         <remap from="current_pose" to="/odometry/imu" />
-        <param name="odom_frame_id" value="odom_laser" />
+        <param name="odom_frame_id" value="odom_lio" />
         <param name="base_frame_id" value="os_sensor" />
         <param name="global_frame_id" value="map" />
-    </node> -->
-
-    
+        <param name="transform_tolerance" value="0.1" />
+    </node>
 
 </launch>
