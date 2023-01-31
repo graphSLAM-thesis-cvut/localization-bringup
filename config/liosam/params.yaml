@@ -48,11 +48,11 @@ lio_sam:
   # extrinsicRPY: [0, -1, 0,
   #                1, 0, 0,
                 #  0, 0, 1]
-  extrinsicRot: [-0.71, 0.71, 0,
-                0.71, 0.71, 0,
+  extrinsicRot: [0.71, -0.71, 0,
+                -0.71, -0.71, 0,
                 0, 0, -1]
-  extrinsicRPY: [-0.71, 0.71, 0,
-                0.71, 0.71, 0,
+  extrinsicRPY: [0.71, -0.71, 0,
+                -0.71, -0.71, 0,
                 0, 0, -1]
 
   # LOAM feature threshold
