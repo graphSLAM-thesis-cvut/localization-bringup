@@ -1,0 +1,2 @@
+- Put the hierarchical structure back (resolve the problem that laser odometry is much less often then lidar)
+map -> odom_laser -> odom -> baselink
