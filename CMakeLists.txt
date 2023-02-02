@@ -7,11 +7,20 @@ project(thesis)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+
+
+find_package(Eigen3 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  eigen_conversions
 )
+
+
+find_package(GTSAM REQUIRED) # Uses installed package
+include_directories(${GTSAM_INCLUDE_DIR})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -134,6 +143,18 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/thesis_node.cpp)
+
+add_executable(odom_slam src/odom_slam.cpp)
+target_link_libraries(odom_slam
+  ${catkin_LIBRARIES}
+  gtsam
+  )
+# add_executable(test src/test.cpp)
+#   target_link_libraries(test
+#     ${catkin_LIBRARIES}
+#     gtsam
+#     )
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
