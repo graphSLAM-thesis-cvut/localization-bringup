@@ -4,20 +4,19 @@
 
 #include <eigen_conversions/eigen_msg.h>
 #include <gtsam/geometry/Pose3.h>
+
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/nonlinear/ISAM2.h>
+#include <gtsam/nonlinear/Marginals.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/linear/LossFunctions.h>
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam/inference/Symbol.h>
-
-#include <visualization_msgs/MarkerArray.h>
+#include <boost/array.hpp>
 
 using gtsam::symbol_shorthand::V; // Vel   (xdot,ydot,zdot)
 using gtsam::symbol_shorthand::X; // Pose3 (x,y,z,r,p,y)
-
-// using namespace graph_slam_3d;
 
 class OdomSlam
 {
@@ -26,12 +25,13 @@ private:
     ros::NodeHandle nh_;
     ros::Subscriber subscriber_robot_pose_;
     ros::Publisher publisher_robot_optimized_path_;
-    ros::Publisher publisher_landmarks_;
+    ros::Publisher publisher_robot_poses_;
     ros::Time lastInsTime_;
 
     // ROS topics
     std::string ros_topic_odometry_ = "/camera/odom/sample";
     std::string publisher_robot_optimized_path_topic_ = "path_optimized";
+    std::string publisher_robot_poses_topic_ = "robot_poses";
 
     // GTSAM variables
 
@@ -59,6 +59,7 @@ private:
     // Functions
     void insCallback(const nav_msgs::Odometry &msg);
     void optimizeGraph();
+    void publishPath(gtsam::Values &result);
 
 public:
     OdomSlam(const ros::NodeHandle &nh);
@@ -85,6 +86,8 @@ OdomSlam::OdomSlam(const ros::NodeHandle &nh) : nh_(nh)
         nh_.subscribe(ros_topic_odometry_, 2, &OdomSlam::insCallback, this);
     publisher_robot_optimized_path_ = nh_.advertise<nav_msgs::Path>(
         publisher_robot_optimized_path_topic_, 2, true);
+    publisher_robot_poses_ = nh_.advertise<nav_msgs::Odometry>(
+        publisher_robot_poses_topic_, 2, true);
 }
 
 OdomSlam::~OdomSlam() {}
@@ -123,26 +126,13 @@ void OdomSlam::insCallback(const nav_msgs::Odometry &odomMsg)
         gtsam::PriorFactor<gtsam::Pose3> priorPose(X(robot_pose_counter_), currentPose, priorPoseNoise);
         graph_->add(priorPose);
         initial_estimate_->insert(X(robot_pose_counter_), currentPose);
-        // insert prior factor
-
-        // conversions::pose_mrpt2gtsam(newest_ins_pose_, pose, cov);
-        // mrpt::gtsam_wrappers::to_gtsam_se3_cov6(newest_ins_pose_, pose, cov);
-
-        // graph_->addExpressionFactor(
-        // 	gtsam::noiseModel::Gaussian::Covariance(cov), pose,
-        // 	gtsam::Pose3_('x', robot_pose_counter_));
-        // initial_estimate_->insert(
-        // 	gtsam::Symbol('x', robot_pose_counter_), pose);
-        // last_ins_pose_ = newest_ins_pose_;
     }
     else
     {
         // TODO: change initial guess;
-        std::cout << "Inserting " << robot_pose_counter_ << " odometry pose and between factor!" << std::endl;
         // insert between factor
         gtsam::noiseModel::Diagonal::shared_ptr odometryNoise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4).finished());
         graph_->add(gtsam::BetweenFactor<gtsam::Pose3>(X(robot_pose_counter_ - 1), X(robot_pose_counter_), prevPose_.between(currentPose), odometryNoise));
-        std::cout << "Inserting initial estimate for pose " << X(robot_pose_counter_) << std::endl;
         initial_estimate_->insert(X(robot_pose_counter_), currentPose);
     }
 
@@ -151,31 +141,13 @@ void OdomSlam::insCallback(const nav_msgs::Odometry &odomMsg)
     optimizeGraph();
 }
 
-// This is the main callback of the node.
-// When we receive a message with the transformation of an aruco wrt the camera,
-// we add to the graph:
-//    - A new node with the current robot pose
-//    - If the aruco had not been previously seen, a node with the aruco pose
-//    - A "between" factor (odometry) between the current and last robot poses
-//    (computed with MRPT)
-//    - A "bearingRange" expression factor between the current robot pose node
-//    and the observed landmark node
-// Finally, the graph is optimized after every observation and the results
-// published
 void OdomSlam::optimizeGraph()
 {
-
-    // The position of the fiducial relative to the camera.
-    // We are currently not using the orientation of the aruco but
-    // should be easy to implement if needed (betweenfactor).
-
-    // Create odometry node and factor
 
     if (debug_)
         graph_->print("Graph");
 
     gtsam::Values result;
-
 
     std::cout << "Updating Graph!"  << std::endl;
     isam2_->update(*graph_, *initial_estimate_);
@@ -184,18 +156,27 @@ void OdomSlam::optimizeGraph()
 
     std::cout << "Result: " << std::endl;
     result.print();
-    // Calculate and print marginal covariances for all variables
-    // gtsam::Marginals marginals(*graph_, result);
+
+    publishPath(result);
+
+    // reset the graph
+    graph_->resize(0);
+    initial_estimate_->clear();
+}
+
+void OdomSlam::publishPath(gtsam::Values &result)
+{
 
     // Publish to visualize on RVIZ
     //   Robot poses
+    // gtsam::Marginals marginals(*graph_, result);
     nav_msgs::Path poses;
     for (size_t i = 0; i <= robot_pose_counter_; i++)
     {
-
-        std::cout << "Getting pose " << X(i) << std::endl;
         gtsam::Pose3 pose_robot_i =
             result.at(X(i)).cast<gtsam::Pose3>();
+        // gtsam::Matrix covariance = marginals.marginalCovariance(X(i));
+
         geometry_msgs::PoseStamped p;
         p.header.stamp = ros::Time::now();
         p.header.frame_id = rviz_ins_frame_;
@@ -208,15 +189,26 @@ void OdomSlam::optimizeGraph()
         eigen_pose.rotate(pose_robot_i.rotation().matrix());
         tf::poseEigenToMsg(eigen_pose, p.pose);
         poses.poses.push_back(p);
+
+        // boost::array<double, 36UL> cov_array;
+        // double* cov_carray = covariance.data();
+        // for (size_t i = 0; i < 36; i++)
+        // {
+        //     // std::cout << i;
+        //     cov_array[i] = cov_carray[i];
+        // }
+        
+        nav_msgs::Odometry odomI;
+        odomI.pose.pose = p.pose;
+        odomI.header = p.header;
+        odomI.header.seq = i;
+        // odomI.pose.covariance = cov_array;
+        publisher_robot_poses_.publish(odomI);
     }
     poses.header.stamp = ros::Time::now();
     poses.header.frame_id = rviz_ins_frame_;
     publisher_robot_optimized_path_.publish(poses);
 
-
-    // reset the graph
-    graph_->resize(0);
-    initial_estimate_->clear();
 }
 
 int main(int argc, char *argv[])
