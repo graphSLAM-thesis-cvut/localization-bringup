@@ -42,6 +42,7 @@ private:
     gtsam::NonlinearFactorGraph::shared_ptr graph_;
 
     gtsam::Values::shared_ptr initial_estimate_;
+    gtsam::Values result_;
     gtsam::ISAM2 *isam2_ = nullptr;
     int insertPeriod_ = 5;
     bool debug_ = true;
@@ -132,8 +133,20 @@ void OdomSlam::insCallback(const nav_msgs::Odometry &odomMsg)
         // TODO: change initial guess;
         // insert between factor
         gtsam::noiseModel::Diagonal::shared_ptr odometryNoise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 5e-1, 5e-1, 5e-1).finished());
-        graph_->add(gtsam::BetweenFactor<gtsam::Pose3>(X(robot_pose_counter_ - 1), X(robot_pose_counter_), prevPose_.between(currentPose), odometryNoise));
-        initial_estimate_->insert(X(robot_pose_counter_), currentPose);
+        auto diff = prevPose_.between(currentPose);
+        graph_->add(gtsam::BetweenFactor<gtsam::Pose3>(X(robot_pose_counter_ - 1), X(robot_pose_counter_), diff, odometryNoise));
+        auto& prevPoseEstimate = result_.at(X(robot_pose_counter_-1)).cast<gtsam::Pose3>();
+        initial_estimate_->insert(X(robot_pose_counter_), prevPoseEstimate.compose(diff));
+
+        // Simulate GPS measurement and see the optimization result and uncertainties
+        if (robot_pose_counter_ == 4)
+        {
+            std::cout << "Inserting first odometry pose!" << std::endl;
+            gtsam::noiseModel::Diagonal::shared_ptr priorPoseNoise;
+            priorPoseNoise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished()); // rad,rad,rad,m, m, m
+            gtsam::PriorFactor<gtsam::Pose3> priorPose(X(robot_pose_counter_), currentPose.compose(diff), priorPoseNoise);
+            graph_->add(priorPose);
+        }
     }
 
     prevPose_ = currentPose;
@@ -147,17 +160,17 @@ void OdomSlam::optimizeGraph()
     if (debug_)
         graph_->print("Graph");
 
-    gtsam::Values result;
+    // gtsam::Values result;
 
     std::cout << "Updating Graph!"  << std::endl;
     isam2_->update(*graph_, *initial_estimate_);
     isam2_->update();
-    result = isam2_->calculateEstimate();
+    result_ = isam2_->calculateEstimate();
 
     std::cout << "Result: " << std::endl;
-    result.print();
+    result_.print();
 
-    publishPath(result);
+    publishPath(result_);
 
     // reset the graph
     graph_->resize(0);

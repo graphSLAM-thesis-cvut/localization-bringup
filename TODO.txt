@@ -2,5 +2,7 @@
 - Check if `odometry/imu_incremental` actually incremental after a loop closure
 - Integrate a fork that supports 6DOF IMU
 
+- Think on how to estimate the uncertainties of the odometry
+
 Some Facts:
 - Doesn't work at all without IMU
