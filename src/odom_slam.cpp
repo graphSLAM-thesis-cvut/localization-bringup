@@ -131,7 +131,7 @@ void OdomSlam::insCallback(const nav_msgs::Odometry &odomMsg)
     {
         // TODO: change initial guess;
         // insert between factor
-        gtsam::noiseModel::Diagonal::shared_ptr odometryNoise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-6, 1e-6, 1e-6, 1e-4, 1e-4, 1e-4).finished());
+        gtsam::noiseModel::Diagonal::shared_ptr odometryNoise = gtsam::noiseModel::Diagonal::Variances((gtsam::Vector(6) << 1e-1, 1e-1, 1e-1, 5e-1, 5e-1, 5e-1).finished());
         graph_->add(gtsam::BetweenFactor<gtsam::Pose3>(X(robot_pose_counter_ - 1), X(robot_pose_counter_), prevPose_.between(currentPose), odometryNoise));
         initial_estimate_->insert(X(robot_pose_counter_), currentPose);
     }
@@ -169,13 +169,12 @@ void OdomSlam::publishPath(gtsam::Values &result)
 
     // Publish to visualize on RVIZ
     //   Robot poses
-    // gtsam::Marginals marginals(*graph_, result);
     nav_msgs::Path poses;
     for (size_t i = 0; i <= robot_pose_counter_; i++)
     {
         gtsam::Pose3 pose_robot_i =
             result.at(X(i)).cast<gtsam::Pose3>();
-        // gtsam::Matrix covariance = marginals.marginalCovariance(X(i));
+        Eigen::MatrixXd covariance = isam2_->marginalCovariance(X(i));
 
         geometry_msgs::PoseStamped p;
         p.header.stamp = ros::Time::now();
@@ -190,19 +189,18 @@ void OdomSlam::publishPath(gtsam::Values &result)
         tf::poseEigenToMsg(eigen_pose, p.pose);
         poses.poses.push_back(p);
 
-        // boost::array<double, 36UL> cov_array;
-        // double* cov_carray = covariance.data();
-        // for (size_t i = 0; i < 36; i++)
-        // {
-        //     // std::cout << i;
-        //     cov_array[i] = cov_carray[i];
-        // }
+        boost::array<double, 36UL> cov_array;
+        double* cov_carray = covariance.data();
+        for (size_t i = 0; i < 36; i++)
+        {
+            cov_array[i] = cov_carray[i];
+        }
         
         nav_msgs::Odometry odomI;
         odomI.pose.pose = p.pose;
         odomI.header = p.header;
         odomI.header.seq = i;
-        // odomI.pose.covariance = cov_array;
+        odomI.pose.covariance = cov_array;
         publisher_robot_poses_.publish(odomI);
     }
     poses.header.stamp = ros::Time::now();
