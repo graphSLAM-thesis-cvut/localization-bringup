@@ -138,15 +138,15 @@ void OdomSlam::insCallback(const nav_msgs::Odometry &odomMsg)
         auto& prevPoseEstimate = result_.at(X(robot_pose_counter_-1)).cast<gtsam::Pose3>();
         initial_estimate_->insert(X(robot_pose_counter_), prevPoseEstimate.compose(diff));
 
-        // Simulate GPS measurement and see the optimization result and uncertainties
-        if (robot_pose_counter_ == 4)
-        {
-            std::cout << "Inserting first odometry pose!" << std::endl;
-            gtsam::noiseModel::Diagonal::shared_ptr priorPoseNoise;
-            priorPoseNoise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished()); // rad,rad,rad,m, m, m
-            gtsam::PriorFactor<gtsam::Pose3> priorPose(X(robot_pose_counter_), currentPose.compose(diff), priorPoseNoise);
-            graph_->add(priorPose);
-        }
+        // // Simulate GPS measurement and see the optimization result and uncertainties
+        // if (robot_pose_counter_ == 4)
+        // {
+        //     std::cout << "Inserting first odometry pose!" << std::endl;
+        //     gtsam::noiseModel::Diagonal::shared_ptr priorPoseNoise;
+        //     priorPoseNoise = gtsam::noiseModel::Diagonal::Sigmas((gtsam::Vector(6) << 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2).finished()); // rad,rad,rad,m, m, m
+        //     gtsam::PriorFactor<gtsam::Pose3> priorPose(X(robot_pose_counter_), currentPose.compose(diff), priorPoseNoise);
+        //     graph_->add(priorPose);
+        // }
     }
 
     prevPose_ = currentPose;
@@ -214,6 +214,7 @@ void OdomSlam::publishPath(gtsam::Values &result)
         odomI.header = p.header;
         odomI.header.seq = i;
         odomI.pose.covariance = cov_array;
+        odomI.header.frame_id = rviz_ins_frame_;
         publisher_robot_poses_.publish(odomI);
     }
     poses.header.stamp = ros::Time::now();

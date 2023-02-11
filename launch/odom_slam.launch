@@ -1,8 +1,10 @@
 <launch>
 
     <node pkg="thesis" type="odom_slam" name="odom_slam_node" output="screen"> 
+        <remap from="/camera/odom/sample" to="/odometry/imu"/>
+        <!-- <remap from="camera_odom" to="/odometry/imu"/> -->
     </node>
-    <node pkg="rosbag" type="play" name="player" output="log" args="--clock $(find thesis)/bags/rs.bag"/>
-     <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find thesis)/rviz/odom_slam.rviz" />
+    <!-- <node pkg="rosbag" type="play" name="player" output="log" args="clock $(find thesis)/bags/rs.bag"/> -->
+    <node name="rviz" pkg="rviz" type="rviz" respawn="false" args="-d $(find thesis)/rviz/odom_slam.rviz" />
 
 </launch>
