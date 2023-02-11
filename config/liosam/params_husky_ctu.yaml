@@ -1,4 +1,4 @@
-lio_sam:
+liorf:
 
   # Topics
   pointCloudTopic: "/points"               # Point cloud data
@@ -8,7 +8,7 @@ lio_sam:
 
   # Frames
   lidarFrame: "os_sensor"
-  baselinkFrame: "base_link"
+  baselinkFrame: "os_sensor"
   odometryFrame: "map"
   mapFrame: "map1"
 
@@ -42,18 +42,17 @@ lio_sam:
 
   # Extrinsics: T_lb (lidar -> imu)
   extrinsicTrans: [0.000, 0.000, -0.280]
-  # extrinsicRot: [-1, 0, 0,
-  #                 0, 1, 0,
-  #                 0, 0, -1]
-  # extrinsicRPY: [0, -1, 0,
-  #                1, 0, 0,
-                #  0, 0, 1]
+
   extrinsicRot: [0.71, -0.71, 0,
                 -0.71, -0.71, 0,
                 0, 0, -1]
   extrinsicRPY: [0.71, -0.71, 0,
                 -0.71, -0.71, 0,
                 0, 0, -1]
+
+  # Extrinsics: (odometer_link -> lidar)
+  odometerTrans: [-0.108, -0.045, 0.070]
+  odometerRot: [0.000, 0.000, 0.383, 0.924] # quaternions
 
   # LOAM feature threshold
   edgeThreshold: 1.0
@@ -114,7 +113,7 @@ ekf_gps:
   publish_tf: false
   map_frame: map
   odom_frame: odom
-  base_link_frame: base_link
+  base_link_frame: os_sensor
   world_frame: odom
 
   frequency: 50

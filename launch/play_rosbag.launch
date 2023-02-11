@@ -1,0 +1,8 @@
+<launch>
+    <remap from="/tf" to="/tf_dev_null"/>
+    <group>
+        <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find thesis)/bags/ctu_LIO.bag"/>
+        <include file="$(find thesis)/launch/odom_from_tf.launch">
+        </include>
+    </group>
+</launch>

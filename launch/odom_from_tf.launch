@@ -1,0 +1,8 @@
+<launch>
+
+    <node pkg="thesis" type="odom_from_tf" name="odom_from_tf_node" output="screen">
+        <param name="baseFrame" value="base_link"/>
+        <remap from="/odom" to="/odom_wheels"/>
+    </node>
+
+</launch>

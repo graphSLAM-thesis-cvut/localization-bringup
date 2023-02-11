@@ -1,0 +1,28 @@
+<launch>
+
+    <!-- <arg name="project" default="lio_sam"/> -->
+    
+    
+
+    <!-- Parameters -->
+    
+    <node pkg="thesis" type="center_odom" name="center_imu" output="screen">
+        <remap from="/odom" to="/odometry/imu"/>
+        <remap from="/odom_out" to="/odometry/imu/centered"/>
+        <param name="odomFrame" value="odom"/>
+        <param name="baseFrame" value="base_link"/>
+    </node>
+    <node pkg="thesis" type="center_odom" name="center_camera" output="screen">
+        <remap from="/odom" to="/camera/odom/sample"/>
+        <remap from="/odom_out" to="/camera/odom/sample/centered"/>
+        <rosparam>
+            odometerTrans: [-0.108, -0.045, 0.070]
+            odometerRot: [0.000, 0.000, 0.383, 0.924]
+        </rosparam>
+    </node>
+    <group>
+        <remap from="/camera/odom/sample" to="/camera/odom/sample_null"/>
+        <include file="$(find thesis)/launch/liorf_husky_ctu.launch" />
+    </group>
+
+</launch>

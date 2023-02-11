@@ -1,6 +1,5 @@
 - Make sure transform_tolerance doesn't break anything (Maybe, it should be a much smaller value)
 - Check if `odometry/imu_incremental` actually incremental after a loop closure
-- Integrate a fork that supports 6DOF IMU
 
 - Think on how to estimate the uncertainties of the odometry
 

@@ -1,0 +1,9 @@
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="ouster_to_t265mount_tf_node" args="0.1025 0.036 -0.07 0 0 0 1 ouster_mount_top camera_mount_frame 100" />
+    <node pkg="tf" type="static_transform_publisher" name="t265mount_to_t265_tf_node" args="0.00595 0.0091 0 0 0 0 1  camera_mount_frame camera_pose_frame 100" />
+    <remap from="/tf" to="/tf_dev_null"/>
+    <rosparam >
+        /use_sim_time: true
+    </rosparam>
+    <node pkg="rosbag" type="play" name="player" output="screen" args="--clock --pause $(find thesis)/bags/husky_office.bag"/>
+</launch>
