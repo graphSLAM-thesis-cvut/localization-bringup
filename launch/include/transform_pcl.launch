@@ -1,0 +1,14 @@
+<launch>
+    <node pkg="thesis" type="transform_pcl" name="transform_pcl_node">
+        <param name="target_frame" value="os_sensor_perp" />
+        <remap from="in" to="/points" />
+        <remap from="out" to="/points_out" />
+    </node>
+
+    <!-- <node pkg="nodelet" type="nodelet" name="test_nodelet"  args="manager" output="screen"/>
+
+    <node pkg="nodelet" type="nodelet" name="pointcloud_transformer" args="load transform_pointcloud/transformPointcloud test_nodelet" output="screen">
+        <param name="to_frame" value="os_sensor_perp"/>
+        <remap from="~input_pcl2" to="/points"/>
+    </node> -->
+</launch> 
