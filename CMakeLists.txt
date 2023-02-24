@@ -158,7 +158,10 @@ add_executable(center_odom src/center_odom.cpp)
 target_link_libraries(center_odom
   ${catkin_LIBRARIES}
 )
-
+add_executable(odom_diffs src/odom_diffs.cpp)
+target_link_libraries(odom_diffs
+  ${catkin_LIBRARIES}
+)
 add_executable(transform_pcl src/main_cloud_transform.cpp)
 target_link_libraries(transform_pcl
   ${catkin_LIBRARIES}

@@ -12,7 +12,7 @@
     <group>
         <!-- <remap from="/tf" to="/tf_dev_null1" /> -->
 
-        <!-- <remap from="/odom_in" to="/camera/odom/sample"/> -->
+        <remap from="/odom_in" to="/camera/odom/sample"/>
 
         <!--- LOAM -->
         <include file="$(find liorf)/launch/include/module_loam.launch" />

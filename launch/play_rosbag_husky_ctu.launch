@@ -10,6 +10,7 @@
         </rosparam>
         <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(find thesis)/bags/husky_office.bag"/>
         <node pkg="image_transport" type="republish" name="image_republisher" output="screen" args="compressed in:=/camera_front/image_raw raw out:=/camera_front/image_raw"/>
+        <node pkg="image_transport" type="republish" name="image_republisher_fisheye" output="screen" args="compressed in:=/camera/fisheye1/image_raw raw out:=/camera/fisheye1/image_raw"/>
     </group>
 
     <include file="$(find thesis)/launch/include/transform_pcl.launch" />
